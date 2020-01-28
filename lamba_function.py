@@ -6,10 +6,6 @@
 # This sample is built using the handler classes approach in skill builder.
 import logging
 import ask_sdk_core.utils as ask_utils
-import os
-from ask_sdk_s3.adapter import S3Adapter
-s3_adapter = S3Adapter(bucket_name=os.environ["S3_PERSISTENCE_BUCKET"])
-
 from ask_sdk_core.skill_builder import CustomSkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
@@ -17,9 +13,24 @@ from ask_sdk_core.handler_input import HandlerInput
 
 from ask_sdk_model import Response
 
+#added for remembering category
+import os
+from ask_sdk_s3.adapter import S3Adapter
+s3_adapter = S3Adapter(bucket_name=os.environ["S3_PERSISTENCE_BUCKET"])
+
+#added to pick a random question from the list
+import random
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+c_questions = ["What is modular programming?", "What is variable?", "What is the return type of printf() function, and what it returns?", "What is the return type of scanf() function, and what it returns?", "What is the difference between printf() and puts()?"]
+c_plus_plus_questions = ["What is this pointer?"]
+java_questions = ["What is JAVA?", "What are the features in JAVA?", "How does Java enable high performance?", "What are the Java IDE's?", "What do you mean by Constructor?","What is meant by Local variable and Instance variable?","What is a Class?","What is an Object?"]
+python_questions = ["How do you debug a Python program?", "What is <Yield> Keyword in Python?", "How to convert a list into a string?", "How to convert a list into a tuple?", "How to convert a list into a set?"]
+coding_questions = ["Implement a binary tree.", "Implement a linked list.", "Implement a stack.", "Implement a queue."]
+behavioral_questions = ["How do you handle a pressuresome situation?", "Tell me about the toughest decision you've had to make in the past six months.", "Tell me about a major mistake you made, and what you did to correct it.", "Tell me about the last time a customer or co-worker got upset with you.", "Tell me about a time you knew you were right, but still had to follow directions or guidelines."]
+technical_questions = ["What is recurssion?", "What’s the most challenging/exciting project you have done in the past two years?", "What kind of tech projects do you work on in your spare time?", "Tell me about the most difficult technical challenge you’ve encountered and how you resolved it.", "What technologies could you not live without?"]
 
 class LaunchRequestHandler(AbstractRequestHandler):
     """Handler for Skill Launch."""
@@ -30,10 +41,9 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        # speak_output = "Welcome to Practice buddy! I will help you sharpen your interview skills.What would you like?"
-        # speak_output = "Welcome to Practice buddy! I will help you sharpen your interview skills. Here are a few things you should know: Your responses will be recorded for you to review during practice sessions. When you are done, say end recording. Let's get started! You can practice questions by saying a category name, like Behavioral, Technical or Coding questions. What would you like to practice?"
         speak_output = "Welcome to Practice buddy! I will help you sharpen your interview skills. You can practice questions by saying a category name, like Behavioral, Technical or Coding questions. What would you like to practice?"
         # ask this after user selects the category for the first time.
+        speak_output_return = "Welcome to Practice buddy! I will help you sharpen your interview skills. You can practice questions by saying a category name, like Behavioral, Technical or Coding questions. What would you like to practice?"
         # Here are a few things you should know: Your responses will be recorded for you to review during practice sessions. When you are done, say end recording. Let's get started!
         # ask_output = "You can practice questions by saying a category name, like Behavioral, Technical or Coding questions. What would you like to practice?"
 
@@ -52,25 +62,48 @@ class CaptureCategoryIntentHandler(AbstractRequestHandler):
         return ask_utils.is_intent_name("CaptureCategoryIntent")(handler_input)
 
     def handle(self, handler_input):
+        # bringing in the slot values
         slots = handler_input.request_envelope.request.intent.slots
+
+        #specifically extracting INTERVIEW_CATEGORY
         category = slots["INTERVIEW_CATEGORY"].value
 
+        #not sure???
         attributes_manager = handler_input.attributes_manager
-
         category_attributes = {
             "interview_category": category
         }
-
         attributes_manager.persistent_attributes = category_attributes
         # attributes_manager.save_persistent_attributes()
 
         # type: (HandlerInput) -> Response
-        # speak_output = "You can practice questions by saying a category name, like Behavioral, Technical or Coding questions. What would you like to practice?"
-        speak_output = "Ok, Here you go - a question in {category}.".format(category=category) #need to add questions here
+        question = " "
+
+        if category is 'C programming language':
+            question = random.choice(c_questions)
+        elif category is 'C plus plus':
+            question = random.choice(c_plus_plus_questions)
+        elif category is 'coding':
+            question = random.choice(coding_questions)
+        elif category is 'behavioral':
+            question = random.choice(behavioral_questions)
+        elif category is 'technical':
+            question = random.choice(technical_questions)
+        elif category is 'python':
+            question = random.choice(python_questions)
+        elif category is 'java':
+            question = random.choice(java_questions)
+        else:
+            question = random.choice(coding_questions)
+
+        # question = python_questions[0]
+
+        speak_output = "Ok, Here you go - a question in {category}. ".format(category=category) + " " +  question + " " + "Your time starts now!"
 
         return (
             handler_input.response_builder
                 .speak(speak_output)
+                # .speak(question)
                 # .ask(ask_output)
                 .response
         )
@@ -197,7 +230,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 #sb = SkillBuilder()
 sb = CustomSkillBuilder(persistence_adapter=s3_adapter)
 
-sb.add_request_handler(HasCategoryLaunchRequestHandler())
+# sb.add_request_handler(HasCategoryLaunchRequestHandler())
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(CaptureCategoryIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
