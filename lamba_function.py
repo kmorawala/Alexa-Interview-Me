@@ -6,8 +6,11 @@
 # This sample is built using the handler classes approach in skill builder.
 import logging
 import ask_sdk_core.utils as ask_utils
+import os
+from ask_sdk_s3.adapter import S3Adapter
+s3_adapter = S3Adapter(bucket_name=os.environ["S3_PERSISTENCE_BUCKET"])
 
-from ask_sdk_core.skill_builder import SkillBuilder
+from ask_sdk_core.skill_builder import CustomSkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
 from ask_sdk_core.handler_input import HandlerInput
@@ -27,13 +30,17 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "Welcome to Practice buddy! I will help you sharpen your interview skills. Here are a few things you should know: Your responses will be recorded for you to review during practice sessions. When you are done, say end recording. Let's get started!"
-        ask_output = "You can practice questions by saying a category name, like Behavioral, Technical or Coding questions. What would you like to practice?"
+        # speak_output = "Welcome to Practice buddy! I will help you sharpen your interview skills.What would you like?"
+        # speak_output = "Welcome to Practice buddy! I will help you sharpen your interview skills. Here are a few things you should know: Your responses will be recorded for you to review during practice sessions. When you are done, say end recording. Let's get started! You can practice questions by saying a category name, like Behavioral, Technical or Coding questions. What would you like to practice?"
+        speak_output = "Welcome to Practice buddy! I will help you sharpen your interview skills. You can practice questions by saying a category name, like Behavioral, Technical or Coding questions. What would you like to practice?"
+        # ask this after user selects the category for the first time.
+        # Here are a few things you should know: Your responses will be recorded for you to review during practice sessions. When you are done, say end recording. Let's get started!
+        # ask_output = "You can practice questions by saying a category name, like Behavioral, Technical or Coding questions. What would you like to practice?"
 
         return (
             handler_input.response_builder
                 .speak(speak_output)
-                .ask(ask_output)
+                .ask("Say it again?")
                 .response
         )
 
@@ -46,20 +53,46 @@ class CaptureCategoryIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         slots = handler_input.request_envelope.request.intent.slots
-        Category = slots["Categories"].value
+        category = slots["INTERVIEW_CATEGORY"].value
+
+        attributes_manager = handler_input.attributes_manager
+
+        category_attributes = {
+            "interview_category": category
+        }
+
+        attributes_manager.persistent_attributes = category_attributes
+        # attributes_manager.save_persistent_attributes()
 
         # type: (HandlerInput) -> Response
-        ask_output = "You can practice questions by saying a category name, like Behavioral, Technical or Coding questions. What would you like to practice?"
-        ask_output = 'Thanks, I will remember that you were born {month} {day} {year}.'.format(month=month, day=day, year=year)
-        # speak_output = 'Thanks, I will remember that you were born {month} {day} {year}.'.format(month=month, day=day, year=year)
+        # speak_output = "You can practice questions by saying a category name, like Behavioral, Technical or Coding questions. What would you like to practice?"
+        speak_output = "Ok, Here you go - a question in {category}.".format(category=category) #need to add questions here
+
         return (
             handler_input.response_builder
-                .ask(ask_output)
                 .speak(speak_output)
-                .speak(speak_output)
+                # .ask(ask_output)
                 .response
         )
 
+class HasCategoryLaunchRequestHandler(AbstractRequestHandler):
+    """Handler for launch after the user have set the interview_category"""
+
+    def can_handle(self, handler_input):
+        # extract persistent attributes and check if they are all present
+        attr = handler_input.attributes_manager.persistent_attributes
+        attributes_are_present = ("interview_category" in attr)
+
+        return attributes_are_present and ask_utils.is_request_type("LaunchRequest")(handler_input)
+
+    def handle(self, handler_input):
+        attr = handler_input.attributes_manager.persistent_attributes
+        category = attr['interview_category']
+
+        speak_output = "Welcome back to Practice buddy. Want to keep practicing {category} category?".format(category=category)
+        handler_input.response_builder.speak(speak_output)
+
+        return handler_input.response_builder.response
 
 class HelpIntentHandler(AbstractRequestHandler):
     """Handler for Help Intent."""
@@ -161,10 +194,12 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 # defined are included below. The order matters - they're processed top to bottom.
 
 
-sb = SkillBuilder()
+#sb = SkillBuilder()
+sb = CustomSkillBuilder(persistence_adapter=s3_adapter)
 
+sb.add_request_handler(HasCategoryLaunchRequestHandler())
 sb.add_request_handler(LaunchRequestHandler())
-sb.add_request_handler(HelloWorldIntentHandler())
+sb.add_request_handler(CaptureCategoryIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
