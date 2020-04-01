@@ -1,0 +1,6 @@
+What is Python? What are the benefits of using Python?
+What is PEP 8?, What is pickling and unpickling?
+How Python is interpreted?, How memory is managed in Python?
+What are the tools that help to find bugs or perform static analysis?
+What are Python decorators?
+What is the difference between list and tuple?

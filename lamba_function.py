@@ -5,6 +5,7 @@
 # session persistence, api calls, and more.
 # This sample is built using the handler classes approach in skill builder.
 # Open issues: need to somehow call the categories in the RepeatCategoryIntent.
+import random
 import logging
 import ask_sdk_core.utils as ask_utils
 from ask_sdk_core.skill_builder import CustomSkillBuilder
@@ -14,29 +15,49 @@ from ask_sdk_core.handler_input import HandlerInput
 
 from ask_sdk_model import Response
 
-#added for remembering category
+# added for remembering category
 import os
 from ask_sdk_s3.adapter import S3Adapter
 s3_adapter = S3Adapter(bucket_name=os.environ["S3_PERSISTENCE_BUCKET"])
 
-#added to pick a random question from the list
-import random
+# added to pick a random question from the list
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-#Added questions in each category, eventually this will be moved to a database
-interview_category = ["python", "c programming language", "java", "c plus plus", "behavioral", "technical", "coding"]
+# Added questions in each category, eventually this will be moved to a database
+python_questions = ["python placeholder"]
+f = open("python.txt", "r")
+for row in f:
+    python_questions.add(row)
+f.close()
+
+# with open('python.txt') as csv_file:
+#     csv_reader = csv.reader(csv_file, delimiter=',')
+#     line_count = 0
+#     for row in csv_reader:
+#         python_questions.add(row)
+# if line_count == 0:
+#     print(f'Column names are {", ".join(row)}')
+#     line_count += 1
+# else:
+#     print(f'\t{row[0]} works in the {row[1]} department, and was born in {row[2]}.')
+#     line_count += 1
+# print(f'Processed {line_count} lines.')
+
+interview_category = ["python", "c programming language",
+                      "java", "c plus plus", "behavioral", "technical", "coding"]
 c_questions = ["C question placeholder."]
 c_plus_plus_questions = ["C plus plus question placeholder."]
 java_questions = ["JAVA question placeholder."]
-python_questions = ["Python question placeholder."]
 coding_questions = ["Coding question placeholder."]
 behavioral_questions = ["Behavioural question placeholder."]
 technical_questions = ["Technical question placeholder."]
 
+
 class LaunchRequestHandler(AbstractRequestHandler):
     """Handler for Skill Launch."""
+
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
 
@@ -48,10 +69,11 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .ask("Can you please say it again?")
-                .response
+            .speak(speak_output)
+            .ask("Can you please say it again?")
+            .response
         )
+
 
 class HasCategoryLaunchRequestHandler(AbstractRequestHandler):
     """Handler for launch after the user have set the interview_category"""
@@ -64,21 +86,24 @@ class HasCategoryLaunchRequestHandler(AbstractRequestHandler):
         return attributes_are_present and ask_utils.is_request_type("LaunchRequest")(handler_input)
 
     def handle(self, handler_input):
-        #retrieve the attribute
+        # retrieve the attribute
         attr = handler_input.attributes_manager.persistent_attributes
         category = attr['interview_category']
 
-        speak_output = "Welcome back to Practice buddy. Want to keep practicing {category}? Say instructions for what this skill does".format(category=category)
+        speak_output = "Welcome back to Practice buddy. Want to keep practicing {category}? Say instructions for what this skill does".format(
+            category=category)
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .ask("Can you please say it again?")
-                .response
+            .speak(speak_output)
+            .ask("Can you please say it again?")
+            .response
         )
+
 
 class CaptureCategoryIntentHandler(AbstractRequestHandler):
     """Handler for CaptureCategoryIntent Intent."""
+
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
         return ask_utils.is_intent_name("CaptureCategoryIntent")(handler_input)
@@ -87,10 +112,10 @@ class CaptureCategoryIntentHandler(AbstractRequestHandler):
         # bringing in the slot values
         slots = handler_input.request_envelope.request.intent.slots
 
-        #specifically extracting INTERVIEW_CATEGORY
+        # specifically extracting INTERVIEW_CATEGORY
         category = slots["INTERVIEW_CATEGORY"].value
 
-        #saving the interview category in the "interview_category" persistent_attribute
+        # saving the interview category in the "interview_category" persistent_attribute
         attributes_manager = handler_input.attributes_manager
         category_attributes = {
             "interview_category": category
@@ -101,14 +126,16 @@ class CaptureCategoryIntentHandler(AbstractRequestHandler):
         # type: (HandlerInput) -> Response
         question = find_a_question(category)
 
-        speak_output = "Here is a question in {category}. ".format(category=category) +  question + " " + "When done, say next question or switch category!"
+        speak_output = "Here is a question in {category}. ".format(
+            category=category) + question + " " + "When done, say next question or switch category!"
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .ask("Can you please say it again?")
-                .response
+            .speak(speak_output)
+            .ask("Can you please say it again?")
+            .response
         )
+
 
 class SwitchCategoryIntentHandler(AbstractRequestHandler):
     """Handler for SwitchCategoryIntent Intent."""
@@ -122,13 +149,13 @@ class SwitchCategoryIntentHandler(AbstractRequestHandler):
         # bringing in the slot values
         slots = handler_input.request_envelope.request.intent.slots
 
-        #if it's not null
+        # if it's not null
         if slots["INTERVIEW_CATEGORY"].value is not None:
 
-            #specifically extracting INTERVIEW_CATEGORY
+            # specifically extracting INTERVIEW_CATEGORY
             category = slots["INTERVIEW_CATEGORY"].value
 
-            #saving the interview category in the "interview_category" persistent_attribute
+            # saving the interview category in the "interview_category" persistent_attribute
             attributes_manager = handler_input.attributes_manager
             category_attributes = {
                 "interview_category": category
@@ -140,19 +167,22 @@ class SwitchCategoryIntentHandler(AbstractRequestHandler):
             # Determine the question in a specific caregory
             question = find_a_question(category)
 
-            speak_output = "Here is a question in {category}. ".format(category=category) + " " +  question + " " + "When done, say next question or switch category!"
+            speak_output = "Here is a question in {category}. ".format(
+                category=category) + " " + question + " " + "When done, say next question or switch category!"
         else:
             speak_output = "Which category would you like?"
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .ask("Can you please say it again?")
-                .response
+            .speak(speak_output)
+            .ask("Can you please say it again?")
+            .response
         )
+
 
 class AskNextQuestionIntentHandler(AbstractRequestHandler):
     """Handler for AskNextQuestionIntent."""
+
     def can_handle(self, handler_input):
         return ask_utils.is_intent_name("AskNextQuestionIntent")(handler_input)
 
@@ -172,14 +202,15 @@ class AskNextQuestionIntentHandler(AbstractRequestHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .ask("Can you please say it again?")
-                .response
+            .speak(speak_output)
+            .ask("Can you please say it again?")
+            .response
         )
 
 
 class GetInstructionsIntentHandler(AbstractRequestHandler):
     """Handler for GetInstructionsIntent."""
+
     def can_handle(self, handler_input):
         return ask_utils.is_intent_name("GetInstructionsIntent")(handler_input)
 
@@ -191,13 +222,15 @@ class GetInstructionsIntentHandler(AbstractRequestHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .ask("Can you please say it again?")
-                .response
+            .speak(speak_output)
+            .ask("Can you please say it again?")
+            .response
         )
+
 
 class RepeatCategoryIntentHandler(AbstractRequestHandler):
     """Handler for RepeatCategoryIntent."""
+
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
         return ask_utils.is_intent_name("RepeatCategoryIntent")(handler_input)
@@ -212,14 +245,15 @@ class RepeatCategoryIntentHandler(AbstractRequestHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output + categories)
-                .ask("Can you please say it again?")
-                .response
+            .speak(speak_output + categories)
+            .ask("Can you please say it again?")
+            .response
         )
 
 
 class HelpIntentHandler(AbstractRequestHandler):
     """Handler for Help Intent."""
+
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
         return ask_utils.is_intent_name("AMAZON.HelpIntent")(handler_input)
@@ -230,14 +264,15 @@ class HelpIntentHandler(AbstractRequestHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .ask(speak_output)
-                .response
+            .speak(speak_output)
+            .ask(speak_output)
+            .response
         )
 
 
 class CancelOrStopIntentHandler(AbstractRequestHandler):
     """Single handler for Cancel and Stop Intent."""
+
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
         return (ask_utils.is_intent_name("AMAZON.CancelIntent")(handler_input) or
@@ -249,13 +284,14 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .response
+            .speak(speak_output)
+            .response
         )
 
 
 class SessionEndedRequestHandler(AbstractRequestHandler):
     """Handler for Session End."""
+
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
         return ask_utils.is_request_type("SessionEndedRequest")(handler_input)
@@ -274,6 +310,7 @@ class IntentReflectorHandler(AbstractRequestHandler):
     for your intents by defining them above, then also adding them to the request
     handler chain below.
     """
+
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
         return ask_utils.is_request_type("IntentRequest")(handler_input)
@@ -285,9 +322,9 @@ class IntentReflectorHandler(AbstractRequestHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                # .ask("add a reprompt if you want to keep the session open for the user to respond")
-                .response
+            .speak(speak_output)
+            # .ask("add a reprompt if you want to keep the session open for the user to respond")
+            .response
         )
 
 
@@ -296,6 +333,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
     stating the request handler chain is not found, you have not implemented a handler for
     the intent being invoked or included it in the skill builder below.
     """
+
     def can_handle(self, handler_input, exception):
         # type: (HandlerInput, Exception) -> bool
         return True
@@ -308,13 +346,15 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 
         return (
             handler_input.response_builder
-                .speak(speak_output)
-                .ask(speak_output)
-                .response
+            .speak(speak_output)
+            .ask(speak_output)
+            .response
         )
 
 
 ''' The following function finds the correct list based on the category given.'''
+
+
 def find_a_question(str):
     if str.lower() == 'c' or str.lower() == 'c programming language':
         return random.choice(c_questions)
@@ -333,6 +373,7 @@ def find_a_question(str):
     else:
         return random.choice(coding_questions)
 
+
 # The SkillBuilder object acts as the entry point for your skill, routing all request and response
 # payloads to the handlers above. Make sure any new handlers or interceptors you've
 # defined are included below. The order matters - they're processed top to bottom.
@@ -348,7 +389,8 @@ sb.add_request_handler(GetInstructionsIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
-sb.add_request_handler(IntentReflectorHandler()) # make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
+# make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
+sb.add_request_handler(IntentReflectorHandler())
 sb.add_exception_handler(CatchAllExceptionHandler())
 
 lambda_handler = sb.lambda_handler()
