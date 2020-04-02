@@ -4,6 +4,10 @@ Interview with Alexa!
 ## How to get started?
 Since this app has not been published into the market place, if you would like to install it on your Alexa devices, go to [Alexa Developer Console](https://developer.amazon.com/alexa/console/ask) and click on **Create a Skill**
 
+<table><tr><td>
+    <img src="https://github.com/kmorawala/Alexa-Interview-Me/blob/master/Images/Create_Skill.png" />
+</td></tr></table>
+
 ![alt text](https://github.com/kmorawala/Alexa-Interview-Me/blob/master/Images/Create_Skill.png "Create a Skill")
 
 Click on **Custom** 
