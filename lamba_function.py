@@ -110,48 +110,13 @@ class HasCategoryLaunchRequestHandler(AbstractRequestHandler):
         )
 
 
-class CaptureCategoryIntentHandler(AbstractRequestHandler):
-    """Handler for CaptureCategoryIntent Intent."""
-
-    def can_handle(self, handler_input):
-        # type: (HandlerInput) -> bool
-        return ask_utils.is_intent_name("CaptureCategoryIntent")(handler_input)
-
-    def handle(self, handler_input):
-        # bringing in the slot values
-        slots = handler_input.request_envelope.request.intent.slots
-
-        # specifically extracting INTERVIEW_CATEGORY
-        category = slots["INTERVIEW_CATEGORY"].value
-
-        # saving the interview category in the "interview_category" persistent_attribute
-        attributes_manager = handler_input.attributes_manager
-        category_attributes = {
-            "interview_category": category
-        }
-        attributes_manager.persistent_attributes = category_attributes
-        attributes_manager.save_persistent_attributes()
-
-        # type: (HandlerInput) -> Response
-        question = find_a_question(category)
-
-        speak_output = "Here is a question in {category}. ".format(
-            category=category) + question + " " + "When done, say next question or switch category!"
-
-        return (
-            handler_input.response_builder
-            .speak(speak_output)
-            .ask("Can you please say it again?")
-            .response
-        )
-
-
 class SwitchCategoryIntentHandler(AbstractRequestHandler):
     """Handler for SwitchCategoryIntent Intent."""
 
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
-        return ask_utils.is_intent_name("SwitchCategoryIntent")(handler_input)
+        return (ask_utils.is_intent_name("SwitchCategoryIntent")(handler_input) or
+                ask_utils.is_intent_name("CaptureCategoryIntent")(handler_input))
 
     def handle(self, handler_input):
 
@@ -217,26 +182,6 @@ class AskNextQuestionIntentHandler(AbstractRequestHandler):
         )
 
 
-class GetInstructionsIntentHandler(AbstractRequestHandler):
-    """Handler for GetInstructionsIntent."""
-
-    def can_handle(self, handler_input):
-        return ask_utils.is_intent_name("GetInstructionsIntent")(handler_input)
-
-    def handle(self, handler_input):
-        # extract persistent attributes and check if they are all present
-        # type: (HandlerInput) -> Response
-
-        speak_output = "This skill allows you to practice your interview skills by asking you a variety of questions from various categories. You can switch question categories, ask for category names, or continue to have me ask more questions in an existing category. Happy interviewing! What would you like to do next?"
-
-        return (
-            handler_input.response_builder
-            .speak(speak_output)
-            .ask("Can you please say it again?")
-            .response
-        )
-
-
 class RepeatCategoryIntentHandler(AbstractRequestHandler):
     """Handler for RepeatCategoryIntent."""
 
@@ -265,11 +210,12 @@ class HelpIntentHandler(AbstractRequestHandler):
 
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
-        return ask_utils.is_intent_name("AMAZON.HelpIntent")(handler_input)
+        return (ask_utils.is_intent_name("AMAZON.HelpIntent")(handler_input) or
+                ask_utils.is_intent_name("GetInstructionsIntent")(handler_input))
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "You can say hello to me! How can I help?"
+        speak_output = "This skill allows you to practice your interview skills by asking you a variety of questions from various categories. You can switch question categories, ask for category names, or continue to have me ask more questions in an existing category. Happy interviewing! What would you like to do next?"
 
         return (
             handler_input.response_builder
@@ -412,11 +358,9 @@ def find_category(str):
 sb = CustomSkillBuilder(persistence_adapter=s3_adapter)
 sb.add_request_handler(HasCategoryLaunchRequestHandler())
 sb.add_request_handler(LaunchRequestHandler())
-sb.add_request_handler(CaptureCategoryIntentHandler())
 sb.add_request_handler(AskNextQuestionIntentHandler())
 sb.add_request_handler(SwitchCategoryIntentHandler())
 sb.add_request_handler(RepeatCategoryIntentHandler())
-sb.add_request_handler(GetInstructionsIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
