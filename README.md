@@ -4,6 +4,8 @@ Interview with Alexa!
 ## How to get started?
 Since this app has not been published into the market place, if you would like to install it on your Alexa devices, go to [Alexa Developer Console](https://developer.amazon.com/alexa/console/ask) and click on **Create a Skill** and click on **Custom** and Choose **Start from scratch**.
 
+![alt text](https://github.com/kmorawala/Alexa-Interview-Me/blob/master/Images/Create_Skill.png "Create a Skill")
+
 ### Build Tab
 Give an appropriate **invocation** word under **Skill Invocation Name** field for your app. This word will start the skill when uttered by the user.
 
