@@ -1,0 +1,12 @@
+﻿switch
+{INTERVIEW_CATEGORY} please
+No
+change category
+switch category
+A question in another category.
+" A question in {INTERVIEW_CATEGORY} category."
+Change the question type to {INTERVIEW_CATEGORY}
+Change the question type.
+Change the category.
+Ask me a {INTERVIEW_CATEGORY} question.
+I want to switch the question type.

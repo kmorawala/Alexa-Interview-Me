@@ -4,7 +4,6 @@
 # Please visit https://alexa.design/cookbook for additional examples on implementing slots, dialog management,
 # session persistence, api calls, and more.
 # This sample is built using the handler classes approach in skill builder.
-# Open issues: need to somehow call the categories in the RepeatCategoryIntent.
 import random
 import logging
 import ask_sdk_core.utils as ask_utils
@@ -12,7 +11,6 @@ from ask_sdk_core.skill_builder import CustomSkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
 from ask_sdk_core.handler_input import HandlerInput
-
 from ask_sdk_model import Response
 
 # added for remembering category
@@ -26,33 +24,44 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # Added questions in each category, eventually this will be moved to a database
-python_questions = ["python placeholder"]
-f = open("python.txt", "r")
-for row in f:
-    python_questions.add(row)
-f.close()
+interview_category = ["python", "java", "c",
+                      "behavioral", "technical", "coding"]
+python_questions = []
+c_questions = []
+c_plus_plus_questions = []
+java_questions = []
+coding_questions = []
+behavioral_questions = []
+technical_questions = []
 
-# with open('python.txt') as csv_file:
-#     csv_reader = csv.reader(csv_file, delimiter=',')
-#     line_count = 0
-#     for row in csv_reader:
-#         python_questions.add(row)
-# if line_count == 0:
-#     print(f'Column names are {", ".join(row)}')
-#     line_count += 1
-# else:
-#     print(f'\t{row[0]} works in the {row[1]} department, and was born in {row[2]}.')
-#     line_count += 1
-# print(f'Processed {line_count} lines.')
+"""The following function adds each line of a file to a given list"""
 
-interview_category = ["python", "c programming language",
-                      "java", "c plus plus", "behavioral", "technical", "coding"]
-c_questions = ["C question placeholder."]
-c_plus_plus_questions = ["C plus plus question placeholder."]
-java_questions = ["JAVA question placeholder."]
-coding_questions = ["Coding question placeholder."]
-behavioral_questions = ["Behavioural question placeholder."]
-technical_questions = ["Technical question placeholder."]
+
+def add_questions(filename, listname):
+    f = open(filename, "r")
+    for row in f:
+        # additional code added for parsing if a question object is created in future
+        index = row.find(', ')
+        if index is -1:
+            listname.append(row)
+        else:
+            text = row
+            category = row[:index]
+            question_text = row[index + 1:]
+            # question = question(caregory, question_text)
+            # listname.append(row)
+            listname.append(question_text)
+    f.close()
+
+
+"""The following lines adds the questions in each language category. AMZ Lambda does not allow usage of .os module and hence for loop could not be run on a directory address
+"""
+add_questions('python.txt', python_questions)
+add_questions('c.txt', c_questions)
+add_questions('java.txt', java_questions)
+add_questions('coding.txt', coding_questions)
+add_questions('behavioral.txt', behavioral_questions)
+add_questions('technical.txt', technical_questions)
 
 
 class LaunchRequestHandler(AbstractRequestHandler):
@@ -65,7 +74,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "Welcome to Practice buddy! Are you ready to sharpen your interview skills? You can practice questions by saying a category name, like Behavioral, Technical or Coding questions or programming languages. What would you like to practice?"
+        speak_output = "Welcome to Practice buddy! Are you ready to sharpen your interview skills? You can practice questions by saying a category name. What would you like to practice?"
 
         return (
             handler_input.response_builder
@@ -90,7 +99,7 @@ class HasCategoryLaunchRequestHandler(AbstractRequestHandler):
         attr = handler_input.attributes_manager.persistent_attributes
         category = attr['interview_category']
 
-        speak_output = "Welcome back to Practice buddy. Want to keep practicing {category}? Say instructions for what this skill does".format(
+        speak_output = "Welcome back to Practice buddy. Want to keep practicing {category}?".format(
             category=category)
 
         return (
@@ -276,11 +285,16 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
         return (ask_utils.is_intent_name("AMAZON.CancelIntent")(handler_input) or
-                ask_utils.is_intent_name("AMAZON.StopIntent")(handler_input))
+                ask_utils.is_intent_name("AMAZON.StopIntent")(handler_input) or
+                ask_utils.is_intent_name("AMAZON.PauseIntent")(handler_input))
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "Goodbye!"
+        speak_output = ""
+        if ask_utils.is_intent_name("AMAZON.PauseIntent")(handler_input):
+            speak_output = "OK! Relaunch the skill when you are ready!"
+        else:
+            speak_output = "Goodbye!"
 
         return (
             handler_input.response_builder
@@ -351,27 +365,44 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
             .response
         )
 
+# <---------------------------------------Helper Methods--------------------------------------->
 
-''' The following function finds the correct list based on the category given.'''
+
+''' The following function finds a question at random from a list and removes it from the list.'''
 
 
 def find_a_question(str):
-    if str.lower() == 'c' or str.lower() == 'c programming language':
-        return random.choice(c_questions)
+    try:
+        category = find_category(str)
+        question = random.choice(category)
+        category.remove(question)
+        return question
+    except:
+        return "There are no questions in this category!"
+
+
+''' The following function finds the correct list name based on the category given.'''
+
+
+def find_category(str):
+    category = ""
+    if str.lower() == 'c' or str.lower() == 'c programming language' or str.lower() == 'c programming' or str.lower == 'c language':
+        category = c_questions
     elif str.lower() == 'c plus plus':
-        return random.choice(c_plus_plus_questions)
+        category = c_plus_plus_questions
     elif str.lower() == 'coding':
-        return random.choice(coding_questions)
+        category = coding_questions
     elif str.lower() == 'behavioral':
-        return random.choice(behavioral_questions)
+        category = behavioral_questions
     elif str.lower() == 'technical':
-        return random.choice(technical_questions)
+        category = technical_questions
     elif str.lower() == 'python':
-        return random.choice(python_questions)
+        category = python_questions
     elif str.lower() == 'java':
-        return random.choice(java_questions)
+        category = java_questions
     else:
-        return random.choice(coding_questions)
+        category = coding_questions
+    return category
 
 
 # The SkillBuilder object acts as the entry point for your skill, routing all request and response

@@ -1,0 +1,59 @@
+What do you know about Java?
+What are the supported platforms by Java Programming Language?
+List any five features of Java?
+Why is Java Architectural Neutral?
+How Java enabled High Performance?
+Why Java is considered dynamic?
+What is Java Virtual Machine and how it is considered in context of Java’s platform independent feature?
+List two Java IDE’s?
+List some Java keywords(unlike C, C++ keywords)?
+What do you mean by Object?
+Define class?
+What kind of variables a class can consist of?
+What is a Local Variable?
+What is a Instance Variable?
+What is a Class Variable?
+What is Singleton class?
+What do you mean by Constructor?
+List the three steps for creating an Object for a class?
+What is the default value of byte datatype in Java?
+What is the default value of float and double datatype in Java?
+When a byte datatype is used?
+What is a static variable?
+What do you mean by Access Modifier?
+What is protected access modifier?
+What do you mean by synchronized Non Access Modifier?
+According to Java Operator precedence, which operator is considered to be with highest precedence?
+Variables used in a switch statement can be used with which datatypes?
+When parseInt() method can be used?
+Why is String class considered immutable?
+Why is StringBuffer called mutable?
+What is the difference between StringBuffer and StringBuilder class?
+Which package is used for pattern matching with regular expressions?
+What is finalize() method?
+What is an Exception?
+What do you mean by Checked Exceptions?
+Explain Runtime Exceptions?
+Which are the two subclasses under Exception class?
+When throws keyword is used?
+When throw keyword is used?
+How finally used under Exception Handling?
+What things should be kept in mind while creating your own exceptions in Java?
+All exceptions must be a child of Throwable.
+Define Inheritance?
+When super keyword is used?
+What is Polymorphism?
+What is Abstraction?
+What is Abstract class?
+When Abstract methods are used?
+What is Encapsulation?
+What is the primary benefit of Encapsulation?
+What is an Interface?
+Give some features of Interface?
+Define Packages in Java?
+Why Packages are used?
+What do you mean by Multithreaded program?
+What are the two ways in which Thread can be created?
+What is an applet?
+An applet extend which class?
+Explain garbage collection in Java?
