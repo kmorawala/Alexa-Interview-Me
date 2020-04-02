@@ -1,4 +1,4 @@
-# alexa-prep-me
+# Alexa Interview Me
 Interview with Alexa!
 
 ## How to get started?
